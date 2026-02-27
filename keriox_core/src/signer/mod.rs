@@ -66,6 +66,16 @@ impl CryptoBox {
             next_priv_key,
         })
     }
+
+    pub fn new_deterministic(seed: SeedPrefix, next_seed: SeedPrefix) -> Result<Self, Error> {
+        let signer = Signer::new_with_seed(&seed)?;
+        let (next_pub_key, next_priv_key) = next_seed.derive_key_pair()?;
+        Ok(CryptoBox {
+            signer,
+            next_pub_key,
+            next_priv_key,
+        })
+    }
 }
 
 impl Default for CryptoBox {
