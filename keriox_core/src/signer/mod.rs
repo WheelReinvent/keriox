@@ -56,6 +56,22 @@ impl CryptoBox {
             next_priv_key,
         })
     }
+
+    pub fn new_with_seed(seed: SeedPrefix) -> Result<Self, Error> {
+        let signer = Signer::new_with_seed(&seed)?;
+        let (next_pub_key, next_priv_key) = generate_key_pair()?;
+        Ok(CryptoBox {
+            signer,
+            next_pub_key,
+            next_priv_key,
+        })
+    }
+}
+
+impl Default for CryptoBox {
+    fn default() -> Self {
+        Self::new().expect("Failed to create default CryptoBox")
+    }
 }
 
 pub struct Signer {

@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
 use keri_core::{
+    event::{sections::seal::Seal, KeyEvent},
+
     event_message::signature::Signature,
-    oobi::LocationScheme,
+    event_message::msg::KeriEvent,
     prefix::{BasicPrefix, IdentifierPrefix, SelfSigningPrefix},
     processor::validator::VerificationError,
+    oobi::LocationScheme,
     state::IdentifierState,
 };
 
@@ -61,16 +64,31 @@ impl Controller {
         Ok(controller)
     }
 
+    pub fn anchor_with_seal(
+        &self,
+        id: &IdentifierPrefix,
+        payload: &[Seal],
+    ) -> Result<KeriEvent<KeyEvent>, MechanicsError> {
+        // Delegate the call to known_events which has the implementation
+        self.known_events.anchor_with_seal(id, payload)
+    }
+
     pub async fn incept(
         &self,
         public_keys: Vec<BasicPrefix>,
         next_pub_keys: Vec<BasicPrefix>,
         witnesses: Vec<LocationScheme>,
         witness_threshold: u64,
+        delegator: Option<IdentifierPrefix>,
     ) -> Result<String, MechanicsError> {
         self.setup_witnesses(&witnesses).await?;
-        self.known_events
-            .incept(public_keys, next_pub_keys, witnesses, witness_threshold)
+        self.known_events.incept(
+            public_keys,
+            next_pub_keys,
+            witnesses,
+            witness_threshold,
+            delegator,
+        )
     }
 
     pub fn finalize_incept(
@@ -78,7 +96,10 @@ impl Controller {
         event: &[u8],
         sig: &SelfSigningPrefix,
     ) -> Result<Identifier, ControllerError> {
-        let initialized_id = self.known_events.finalize_inception(event, sig).unwrap();
+        let initialized_id = self.known_events
+            .finalize_inception(event, sig)
+            .map_err(|e| ControllerError::OtherError(e.to_string()))?;
+
         Ok(Identifier::new(
             initialized_id,
             None,
@@ -94,6 +115,21 @@ impl Controller {
             self.communication.resolve_loc_schema(lc).await?;
         }
         Ok(())
+    }
+
+    pub fn get_identifier(&self, prefix: &IdentifierPrefix) -> Result<Identifier, MechanicsError> {
+        // We ensure the state exists in the database first
+        let _state = self.known_events.get_state(prefix)?;
+
+        // Pass None or the required prefix type instead of IdentifierState
+        Ok(Identifier::new(
+            prefix.clone(),
+            None, // Identifier usually fetches its own state from known_events
+            self.known_events.clone(),
+            self.communication.clone(),
+            #[cfg(feature = "query_cache")]
+            self.cache.clone(),
+        ))
     }
 
     pub fn get_kel_with_receipts(

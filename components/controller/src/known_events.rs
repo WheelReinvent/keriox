@@ -269,6 +269,7 @@ impl KnownEvents {
         next_pub_keys: Vec<BasicPrefix>,
         witnesses: Vec<LocationScheme>,
         witness_threshold: u64,
+        delegator: Option<IdentifierPrefix>,
     ) -> Result<String, MechanicsError> {
         let witnesses = witnesses
             .iter()
@@ -285,32 +286,36 @@ impl KnownEvents {
             next_pub_keys,
             witnesses,
             witness_threshold,
-            None,
+            delegator.as_ref(),
         )
-        .map_err(|e| MechanicsError::EventGenerationError(e.to_string()))
+            .map_err(|e| MechanicsError::EventGenerationError(e.to_string()))
     }
 
     /// Verifies event signature and adds it to kel.
     /// Returns new established identifier prefix.
     /// Meant to be used for identifiers with one key pair.
     /// Must call `IdentifierController::notify_witnesses` after calling this function.
+    // In known_events.rs
+
     pub fn finalize_inception(
         &self,
         event: &[u8],
         sig: &SelfSigningPrefix,
     ) -> Result<IdentifierPrefix, MechanicsError> {
-        let parsed_event =
-            parse_event_type(event).map_err(|_e| MechanicsError::EventFormatError)?;
+        let parsed_event = parse_event_type(event).map_err(|_e| MechanicsError::EventFormatError)?;
         match parsed_event {
             EventType::KeyEvent(ke) => {
-                if let EventData::Icp(_) = &ke.data.get_event_data() {
-                    // TODO we assume here that provided signature matches 0th public key.
-                    self.finalize_key_event(&ke, sig, 0)?;
-                    Ok(ke.data.get_prefix())
-                } else {
-                    Err(MechanicsError::InceptionError(
-                        "Wrong event type, should be inception event".into(),
-                    ))
+                let event_data = ke.data.get_event_data();
+                // Match both Icp and Dip event types
+                match event_data {
+                    EventData::Icp(_) | EventData::Dip(_) => {
+                        // Sign and process the event as the 0th key
+                        self.finalize_key_event(&ke, sig, 0)?;
+                        Ok(ke.data.get_prefix())
+                    }
+                    _ => Err(MechanicsError::InceptionError(
+                        "Wrong event type, should be inception (ICP or DIP) event".into(),
+                    )),
                 }
             }
             _ => Err(MechanicsError::InceptionError(
