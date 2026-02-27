@@ -349,7 +349,7 @@ impl RedbDatabase {
         Ok(out)
     }
 
-    fn _get_all_nontrans_receipts_couplets(
+    fn get_all_nontrans_receipts_couplets(
         &self,
         id: &str,
     ) -> Result<Box<dyn DoubleEndedIterator<Item = Nontransferable>>, RedbError> {

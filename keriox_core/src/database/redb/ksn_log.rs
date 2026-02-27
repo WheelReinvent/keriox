@@ -62,7 +62,7 @@ impl AcceptedKsn {
         Ok(())
     }
 
-    pub fn _get_all(&self, id: &IdentifierPrefix) -> Result<Vec<SignedReply>, RedbError> {
+    pub fn get_all(&self, id: &IdentifierPrefix) -> Result<Vec<SignedReply>, RedbError> {
         let str_id = id.to_string();
         let start = (str_id.as_str(), "");
 

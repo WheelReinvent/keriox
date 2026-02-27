@@ -30,7 +30,7 @@ impl<D: TelEventDatabase> MissingRegistryEscrow<D> {
         tel_reference: Arc<D>,
         kel_reference: Arc<EventStorage<RedbDatabase>>,
         escrow_db: &EscrowDatabase,
-        _duration: Duration,
+        duration: Duration,
     ) -> Self {
         let escrow = DigestKeyDatabase::new(escrow_db.0.clone(), "missing_registry_escrow");
         let tel_event_storage = Arc::new(TelEventStorage::new(tel_reference.clone()));

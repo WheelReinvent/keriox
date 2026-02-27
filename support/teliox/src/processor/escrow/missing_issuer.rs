@@ -33,7 +33,7 @@ impl<D: TelEventDatabase> MissingIssuerEscrow<D> {
     pub fn new(
         db: Arc<D>,
         escrow_db: &EscrowDatabase,
-        _duration: Duration,
+        duration: Duration,
         kel_reference: Arc<EventStorage<RedbDatabase>>,
         bus: TelNotificationBus,
     ) -> Self {
