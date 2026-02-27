@@ -121,7 +121,7 @@ pub fn process_signed_oobi<D: EventDatabase + 'static>(
     // check digest
     signed_oobi.reply.check_digest()?;
     // save
-    let r = oobi_manager
+    let _ = oobi_manager
         .process_oobi(signed_oobi)
         .map_err(|e| Error::SemanticError(e.to_string()))?;
 
