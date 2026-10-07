@@ -27,6 +27,7 @@ pub fn incept(
     witnesses: Vec<BasicPrefix>,
     witness_threshold: u64,
     delegator_id: Option<&IdentifierPrefix>,
+    anchors: Vec<Seal>,
 ) -> Result<String, Error> {
     let event_builder = match delegator_id {
         Some(delegator) => EventMsgBuilder::new(EventTypeTag::Dip).with_delegator(delegator),
@@ -37,6 +38,7 @@ pub fn incept(
         .with_next_keys(next_pub_keys)
         .with_witness_list(witnesses.as_slice())
         .with_witness_threshold(&SignatureThreshold::Simple(witness_threshold))
+        .with_seal(anchors)
         .build()
         .map_err(|e| Error::EventGenerationError(e.to_string()))?
         .encode()
@@ -55,6 +57,7 @@ pub fn incept_with_next_hashes(
     witnesses: Vec<BasicPrefix>,
     witness_threshold: u64,
     delegator_id: Option<&IdentifierPrefix>,
+    anchors: Vec<Seal>,
 ) -> Result<KeriEvent<KeyEvent>, Error> {
     // Check if threshold is possible to achive
     match signature_threshold {
@@ -95,6 +98,7 @@ pub fn incept_with_next_hashes(
         .with_next_threshold(next_keys_threshold)
         .with_witness_list(witnesses.as_slice())
         .with_witness_threshold(&SignatureThreshold::Simple(witness_threshold))
+        .with_seal(anchors)
         .build()
         .map_err(|e| Error::EventGenerationError(e.to_string()))
 }

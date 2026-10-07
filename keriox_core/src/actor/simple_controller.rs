@@ -130,6 +130,7 @@ impl<K: KeyManager> SimpleController<K, RedbDatabase> {
             initial_witness.unwrap_or_default(),
             witness_threshold.unwrap_or(0),
             delegator,
+            vec![],
         )
         .unwrap();
         let signature = km.sign(icp.as_bytes())?;
@@ -470,6 +471,7 @@ impl<K: KeyManager> SimpleController<K, RedbDatabase> {
                 initial_witness.unwrap_or_default(),
                 witness_threshold.unwrap_or(0),
                 delegator.as_ref(),
+                vec![],
             )
             .unwrap()
             .encode()?;

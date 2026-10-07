@@ -55,7 +55,7 @@ impl<D: EventDatabase + 'static> BasicProcessor<D> {
             Ok(_) => {
                 events_db
                     .add_kel_finalized_event(signed_event.clone(), id)
-                    .map_err(|_e| Error::DbError)?;
+                    .map_err(|_| Error::DbError)?;
                 publisher.notify(&Notification::KeyEventAdded(signed_event))
             }
             Err(Error::EventOutOfOrderError) => {

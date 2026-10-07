@@ -37,7 +37,7 @@ pub enum Seal {
 #[rkyv(derive(Debug))]
 pub struct DigestSeal {
     #[serde(rename = "d")]
-    dig: SaidValue,
+    pub dig: SaidValue,
 }
 
 impl DigestSeal {

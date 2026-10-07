@@ -76,11 +76,15 @@ impl<D: EventDatabase + EscrowCreator + 'static> DelegationEscrow<D> {
                 let validator = EventValidator::new(self.db.clone());
                 match validator.validate_event(&delegated_event) {
                     Ok(_) => {
-                        // add to kel
                         let child_id = event.event_message.data.get_prefix();
+                        println!("DEBUG: [DelegationEscrow] Successfully validated delegated event for {}", child_id);
+                        // add to kel
                         self.db
                             .add_kel_finalized_event(delegated_event.clone(), &child_id)
-                            .map_err(|_| Error::DbError)?;
+                            .map_err(|_| {
+                                println!("DEBUG: [DelegationEscrow] add_kel_finalized_event failed for {}", child_id);
+                                Error::DbError
+                            })?;
                         // remove from escrow
                         self.delegation_escrow.remove(&event.event_message);
                         bus.notify(&Notification::KeyEventAdded(event))?;
@@ -120,6 +124,7 @@ impl<D: EventDatabase + EscrowCreator + 'static> Notifier for DelegationEscrow<D
                     EventData::Drt(drt) => drt.data.clone(),
                 };
 
+                let anchored_data_len = anchored_data.len();
                 let seals: Vec<EventSeal> = anchored_data
                     .into_iter()
                     .filter_map(|seal| match seal {
@@ -127,6 +132,9 @@ impl<D: EventDatabase + EscrowCreator + 'static> Notifier for DelegationEscrow<D
                         _ => None,
                     })
                     .collect();
+                if anchored_data_len > 0 {
+                    println!("DEBUG: [DelegationEscrow] {} seals processed from {}, {} EventSeals found", anchored_data_len, id, seals.len());
+                }
                 if !seals.is_empty() {
                     let potential_delegator_seal = SourceSeal::new(
                         ev_message.event_message.data.get_sn(),
@@ -136,6 +144,7 @@ impl<D: EventDatabase + EscrowCreator + 'static> Notifier for DelegationEscrow<D
                 }
             }
             Notification::MissingDelegatingEvent(signed_event) => {
+                println!("DEBUG: [DelegationEscrow] MissingDelegatingEvent for {}", signed_event.event_message.data.get_prefix());
                 // ignore events with no signatures
                 if !signed_event.signatures.is_empty() {
                     let delegator_id = match &signed_event.event_message.data.event_data {

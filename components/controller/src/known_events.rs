@@ -67,11 +67,11 @@ impl KnownEvents {
         let (
             mut notification_bus,
             (
-                _out_of_order_escrow,
-                _partially_signed_escrow,
+                out_of_order_escrow,
+                partially_signed_escrow,
                 partially_witnessed_escrow,
-                _delegation_escrow,
-                _duplicates,
+                delegation_escrow,
+                duplicitous_escrow,
             ),
         ) = default_escrow_bus(event_database.clone(), escrow_config);
 
@@ -100,6 +100,26 @@ impl KnownEvents {
         notification_bus.register_observer(
             missing_issuer.clone(),
             vec![JustNotification::KeyEventAdded],
+        );
+        notification_bus.register_observer(
+            out_of_order_escrow.clone(),
+            vec![JustNotification::KeyEventAdded, JustNotification::OutOfOrder],
+        );
+        notification_bus.register_observer(
+            partially_signed_escrow.clone(),
+            vec![JustNotification::PartiallySigned],
+        );
+        notification_bus.register_observer(
+            partially_witnessed_escrow.clone(),
+            vec![JustNotification::PartiallyWitnessed, JustNotification::ReceiptOutOfOrder],
+        );
+        notification_bus.register_observer(
+            delegation_escrow.clone(),
+            vec![JustNotification::KeyEventAdded, JustNotification::MissingDelegatingEvent],
+        );
+        notification_bus.register_observer(
+            duplicitous_escrow.clone(),
+            vec![JustNotification::DuplicitousEvent],
         );
 
         let controller = Self {
@@ -270,6 +290,7 @@ impl KnownEvents {
         witnesses: Vec<LocationScheme>,
         witness_threshold: u64,
         delegator: Option<IdentifierPrefix>,
+        anchors: Vec<Seal>,
     ) -> Result<String, MechanicsError> {
         let witnesses = witnesses
             .iter()
@@ -287,6 +308,7 @@ impl KnownEvents {
             witnesses,
             witness_threshold,
             delegator.as_ref(),
+            anchors,
         )
             .map_err(|e| MechanicsError::EventGenerationError(e.to_string()))
     }

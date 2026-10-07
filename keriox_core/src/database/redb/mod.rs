@@ -123,7 +123,11 @@ impl EventDatabase for RedbDatabase {
         signed_event: SignedEventMessage,
         _id: &IdentifierPrefix,
     ) -> Result<(), RedbError> {
-        let write_txn = self.db.begin_write()?;
+        println!("DEBUG: [REDB] add_kel_finalized_event starting for {}", _id);
+        let write_txn = self.db.begin_write().map_err(|e| {
+            println!("DEBUG: [REDB] Failed to begin_write for {}: {:?}", _id, e);
+            e
+        })?;
         let txn_mode = WriteTxnMode::UseExisting(&write_txn);
 
         self.update_key_state(&txn_mode, &signed_event.event_message)?;
@@ -131,7 +135,7 @@ impl EventDatabase for RedbDatabase {
 
         self.save_to_kel(&txn_mode, &signed_event.event_message)?;
 
-        write_txn.commit()?;
+        write_txn.commit().map_err(|e| e)?;
         Ok(())
     }
 

@@ -64,6 +64,7 @@ impl Identifier {
             initial_witness.unwrap_or_default(),
             witness_threshold.unwrap_or(0),
             delegator.as_ref(),
+            vec![],
         )?;
 
         let serialized_icp = String::from_utf8(icp.encode()?)

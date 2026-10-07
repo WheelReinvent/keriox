@@ -80,6 +80,7 @@ impl Controller {
         witnesses: Vec<LocationScheme>,
         witness_threshold: u64,
         delegator: Option<IdentifierPrefix>,
+        anchors: Vec<Seal>,
     ) -> Result<String, MechanicsError> {
         self.setup_witnesses(&witnesses).await?;
         self.known_events.incept(
@@ -88,6 +89,7 @@ impl Controller {
             witnesses,
             witness_threshold,
             delegator,
+            anchors,
         )
     }
 

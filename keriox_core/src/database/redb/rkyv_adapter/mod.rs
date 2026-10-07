@@ -21,31 +21,41 @@ pub fn serialize_said(said: &SelfAddressingIdentifier) -> Result<AlignedVec, rky
 }
 
 pub fn deserialize_said(bytes: &[u8]) -> Result<SelfAddressingIdentifier, rkyv::rancor::Error> {
-    let archived: &ArchivedSAIDef = rkyv::access(&bytes)?;
+    let mut aligned_bytes = AlignedVec::<16>::with_capacity(bytes.len());
+    aligned_bytes.extend_from_slice(bytes);
+    let archived: &ArchivedSAIDef = rkyv::access(&aligned_bytes)?;
     let deserialized: SelfAddressingIdentifier =
         rkyv::deserialize(With::<ArchivedSAIDef, SAIDef>::cast(archived))?;
     Ok(deserialized)
 }
 
 pub fn deserialize_nontransferable(bytes: &[u8]) -> Result<Nontransferable, rkyv::rancor::Error> {
-    let archived = rkyv::access::<ArchivedNontransferable, rkyv::rancor::Failure>(&bytes).unwrap();
+    let mut aligned_bytes = AlignedVec::<16>::with_capacity(bytes.len());
+    aligned_bytes.extend_from_slice(bytes);
+    let archived = rkyv::access::<ArchivedNontransferable, rkyv::rancor::Failure>(&aligned_bytes).unwrap();
     rkyv::deserialize::<Nontransferable, rkyv::rancor::Error>(archived)
 }
 
 pub fn deserialize_transferable(bytes: &[u8]) -> Result<Transferable, rkyv::rancor::Error> {
-    let archived = rkyv::access::<ArchivedTransferable, rkyv::rancor::Failure>(&bytes).unwrap();
+    let mut aligned_bytes = AlignedVec::<16>::with_capacity(bytes.len());
+    aligned_bytes.extend_from_slice(bytes);
+    let archived = rkyv::access::<ArchivedTransferable, rkyv::rancor::Failure>(&aligned_bytes).unwrap();
     rkyv::deserialize::<Transferable, rkyv::rancor::Error>(archived)
 }
 
 pub fn deserialize_indexed_signatures(
     bytes: &[u8],
 ) -> Result<IndexedSignature, rkyv::rancor::Error> {
-    let archived = rkyv::access::<ArchivedIndexedSignature, rkyv::rancor::Error>(&bytes).unwrap();
+    let mut aligned_bytes = AlignedVec::<16>::with_capacity(bytes.len());
+    aligned_bytes.extend_from_slice(bytes);
+    let archived = rkyv::access::<ArchivedIndexedSignature, rkyv::rancor::Error>(&aligned_bytes).unwrap();
     rkyv::deserialize::<IndexedSignature, rkyv::rancor::Error>(archived)
 }
 
 pub fn deserialize_source_seal(bytes: &[u8]) -> Result<SourceSeal, rkyv::rancor::Error> {
-    let archived = rkyv::access::<ArchivedSourceSeal, rkyv::rancor::Error>(&bytes).unwrap();
+    let mut aligned_bytes = AlignedVec::<16>::with_capacity(bytes.len());
+    aligned_bytes.extend_from_slice(bytes);
+    let archived = rkyv::access::<ArchivedSourceSeal, rkyv::rancor::Error>(&aligned_bytes).unwrap();
     rkyv::deserialize::<SourceSeal, rkyv::rancor::Error>(archived)
 }
 
