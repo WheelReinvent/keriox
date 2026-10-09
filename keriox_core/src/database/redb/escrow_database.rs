@@ -1,7 +1,4 @@
-use std::{
-    sync::Arc,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::sync::Arc;
 
 use redb::{Database, MultimapTableDefinition, TableDefinition};
 use said::SelfAddressingIdentifier;
@@ -278,9 +275,8 @@ impl SequencedEventDatabase for SnKeyDatabase {
     }
 }
 
+/// Seconds since the Unix epoch. Through chrono, so it also works in the
+/// browser (wasm32), where `std::time::SystemTime::now` panics.
 pub(crate) fn get_current_timestamp() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
-        .as_secs()
+    chrono::Utc::now().timestamp().max(0) as u64
 }

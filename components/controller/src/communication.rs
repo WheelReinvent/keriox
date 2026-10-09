@@ -263,6 +263,24 @@ pub trait IdentifierTelTransport {
 
 pub struct HTTPTelTransport;
 
+/// In the browser the core does no networking itself.
+#[cfg(target_arch = "wasm32")]
+#[async_trait::async_trait]
+impl IdentifierTelTransport for HTTPTelTransport {
+    async fn send_query(&self, _qry: SignedTelQuery, _location: LocationScheme) -> Result<String, SendingError> {
+        Err(SendingError::TransportError(keri_core::transport::TransportError::NetworkError(
+            "no network in the browser core".into(),
+        )))
+    }
+
+    async fn send_tel_event(&self, _event: VerifiableEvent, _location: LocationScheme) -> Result<(), SendingError> {
+        Err(SendingError::TransportError(keri_core::transport::TransportError::NetworkError(
+            "no network in the browser core".into(),
+        )))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 #[async_trait::async_trait]
 impl IdentifierTelTransport for HTTPTelTransport {
     async fn send_query(

@@ -31,6 +31,7 @@ impl<E> Default for DefaultTransport<E> {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[async_trait::async_trait]
 impl<E> Transport<E> for DefaultTransport<E>
 where
@@ -219,4 +220,49 @@ where
         }
         Ok(())
     }
+}
+
+/// In the browser the core does no networking itself (the page fetches and
+/// passes CESR in), so every request is refused.
+#[cfg(target_arch = "wasm32")]
+#[async_trait::async_trait]
+impl<E> Transport<E> for DefaultTransport<E>
+where
+    E: for<'a> Deserialize<'a> + Send + Sync + std::error::Error + 'static,
+{
+    async fn send_message(&self, _loc: LocationScheme, _msg: Message) -> Result<(), TransportError<E>> {
+        Err(no_network())
+    }
+
+    #[cfg(feature = "query")]
+    async fn send_query(
+        &self,
+        _loc: LocationScheme,
+        _qry: SignedQueryMessage,
+    ) -> Result<PossibleResponse, TransportError<E>> {
+        Err(no_network())
+    }
+
+    async fn request_loc_scheme(&self, _loc: LocationScheme) -> Result<Vec<Op>, TransportError<E>> {
+        Err(no_network())
+    }
+
+    async fn request_end_role(
+        &self,
+        _loc: LocationScheme,
+        _cid: IdentifierPrefix,
+        _role: Role,
+        _eid: IdentifierPrefix,
+    ) -> Result<Vec<u8>, TransportError<E>> {
+        Err(no_network())
+    }
+
+    async fn resolve_oobi(&self, _loc: LocationScheme, _oobi: Oobi) -> Result<(), TransportError<E>> {
+        Err(no_network())
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn no_network<E>() -> TransportError<E> {
+    TransportError::NetworkError("no network in the browser core".into())
 }

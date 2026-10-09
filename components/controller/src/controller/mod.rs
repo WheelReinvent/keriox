@@ -38,7 +38,9 @@ impl Controller {
             transport,
             tel_transport,
         } = config;
-        std::fs::create_dir_all(&db_path).unwrap();
+        if !keri_core::database::storage::in_memory() {
+            std::fs::create_dir_all(&db_path).unwrap();
+        }
         let mut query_db_path = db_path.clone();
         query_db_path.push("query_cache");
 
@@ -58,6 +60,8 @@ impl Controller {
             #[cfg(feature = "query_cache")]
             cache: query_cache,
         };
+        // In the browser (wasm32) the core does no networking: no witnesses to set up.
+        #[cfg(not(target_arch = "wasm32"))]
         if !initial_oobis.is_empty() {
             async_std::task::block_on(controller.setup_witnesses(&initial_oobis)).unwrap();
         }

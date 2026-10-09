@@ -11,7 +11,7 @@ use keri_core::{
     prefix::IdentifierPrefix,
 };
 use redb::{Database, ReadTransaction, TableDefinition};
-use std::{fs, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 /// Events store. (event digest) -> tel event
 /// The `EVENTS` table directly stores the event data, which other tables reference
@@ -195,10 +195,8 @@ impl TelLogDatabase for RedbTelDatabase {
 
 impl TelEventDatabase for RedbTelDatabase {
     fn new(db_path: impl AsRef<Path>) -> Result<Self, Error> {
-        if let Some(parent) = db_path.as_ref().parent() {
-            fs::create_dir_all(parent).unwrap();
-        }
-        let db = Arc::new(Database::create(db_path).unwrap());
+        keri_core::database::storage::ensure_parent(db_path.as_ref()).unwrap();
+        let db = Arc::new(keri_core::database::storage::open(db_path.as_ref()).unwrap());
         let log = Arc::new(LogTelDb::new(db.clone())?);
         let events_db = TelEventsDb::new(db.clone())?;
         Ok(Self {

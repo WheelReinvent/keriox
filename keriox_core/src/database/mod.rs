@@ -20,6 +20,7 @@ use crate::{
 #[cfg(feature = "mailbox")]
 pub mod mailbox;
 pub mod redb;
+pub mod storage;
 pub mod timestamped;
 
 pub enum QueryParameters<'a> {

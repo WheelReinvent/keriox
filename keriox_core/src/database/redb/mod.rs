@@ -92,7 +92,7 @@ pub struct RedbDatabase {
 
 impl RedbDatabase {
     pub fn new(db_path: &Path) -> Result<Self, RedbError> {
-        let db = Arc::new(Database::create(db_path)?);
+        let db = Arc::new(crate::database::storage::open(db_path)?);
         let log_db = Arc::new(LogDatabase::new(db.clone())?);
         // Create tables
         let write_txn = db.begin_write()?;
